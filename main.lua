@@ -17,7 +17,8 @@ sg.ResetOnSpawn = false
 local s_val, j_val, f_val = 0, 50, 50
 local flying, aim_player, auto_tele = false, false, false
 local auto_z, auto_x, auto_c, auto_v = false, false, false, false
-local esp_player, esp_fruit, auto_get_fruit = false, false, false 
+local esp_player, esp_fruit = false, false 
+local auto_get_fruit = false 
 local target_player = nil
 local active = true 
 
@@ -58,7 +59,7 @@ main.Size = UDim2.new(0, 500, 0, 600)
 main.Position = UDim2.new(0.5, -250, 0.5, -300)
 main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 main.BorderSizePixel = 0
-main.CanvasSize = UDim2.new(0, 0, 4.5, 0) 
+main.CanvasSize = UDim2.new(0, 0, 4.8, 0) 
 main.ScrollBarThickness = 8
 main.Visible = true
 main.Active = true
@@ -134,29 +135,29 @@ CreateSlider("TỐC ĐỘ BAY", 230, 10, 500, 50, function(v) f_val = v end)
 
 CreateToggle("CHẾ ĐỘ BAY", 320, false, function(v) flying = v end)
 CreateToggle("AIM PLAYER", 385, false, function(v) aim_player = v end)
-CreateToggle("AUTO TELEPORT", 450, false, function(v) auto_tele = v end)
+CreateToggle("AUTO TELEPORT ĐỊCH", 450, false, function(v) auto_tele = v end)
 
 -- ESP SETTINGS
-local espTitle = createLabel("--- ESP & FRUIT SETTINGS ---", UDim2.new(0,0,0,515), 24, main)
+local espTitle = createLabel("--- ESP & FRUIT SETTINGS ---", UDim2.new(0,0,0,520), 24, main)
 espTitle.TextColor3 = Color3.fromRGB(0, 200, 255)
-CreateToggle("ESP PLAYER (Tên/HP/PVP)", 565, false, function(v) esp_player = v end)
-CreateToggle("ESP FRUIT (Trái Ác Quỷ)", 630, false, function(v) esp_fruit = v end)
-CreateToggle("AUTO TELE TO FRUIT", 695, false, function(v) auto_get_fruit = v end)
+CreateToggle("ESP PLAYER (Tên/HP/E)", 570, false, function(v) esp_player = v end)
+CreateToggle("ESP FRUIT (Trái Ác Quỷ)", 635, false, function(v) esp_fruit = v end)
+CreateToggle("AUTO TELE TO FRUIT", 700, false, function(v) auto_get_fruit = v end)
 
 -- SKILL SETTINGS
-local skillTitle = createLabel("--- AUTO SKILL SETTINGS ---", UDim2.new(0,0,0,770), 24, main)
+local skillTitle = createLabel("--- AUTO SKILL SETTINGS ---", UDim2.new(0,0,0,780), 24, main)
 skillTitle.TextColor3 = Color3.fromRGB(255, 200, 0)
-CreateToggle("Auto Skill [Z]", 820, false, function(v) auto_z = v end)
-CreateToggle("Auto Skill [X]", 885, false, function(v) auto_x = v end)
-CreateToggle("Auto Skill [C]", 950, false, function(v) auto_c = v end)
-CreateToggle("Auto Skill [V]", 1015, false, function(v) auto_v = v end)
+CreateToggle("Auto Skill [Z]", 830, false, function(v) auto_z = v end)
+CreateToggle("Auto Skill [X]", 895, false, function(v) auto_x = v end)
+CreateToggle("Auto Skill [C]", 960, false, function(v) auto_c = v end)
+CreateToggle("Auto Skill [V]", 1025, false, function(v) auto_v = v end)
 
 -- #######################################################
 -- # PHẦN CHỌN NGƯỜI CHƠI                                #
 -- #######################################################
 local selectBtn = Instance.new("TextButton", main)
 selectBtn.Size = UDim2.new(0.85, 0, 0, 55)
-selectBtn.Position = UDim2.new(0.075, 0, 0, 1100)
+selectBtn.Position = UDim2.new(0.075, 0, 0, 1110)
 selectBtn.Text = "DANH SÁCH NGƯỜI CHƠI (MỞ)"
 selectBtn.BackgroundColor3 = Color3.fromRGB(0, 80, 150)
 selectBtn.TextColor3 = Color3.new(1, 1, 1)
@@ -166,7 +167,7 @@ Instance.new("UICorner", selectBtn)
 
 local pFrame = Instance.new("Frame", main)
 pFrame.Size = UDim2.new(0.85, 0, 0, 350)
-pFrame.Position = UDim2.new(0.075, 0, 0, 1165)
+pFrame.Position = UDim2.new(0.075, 0, 0, 1175)
 pFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 pFrame.Visible = false 
 Instance.new("UICorner", pFrame)
@@ -222,36 +223,22 @@ selectBtn.MouseButton1Click:Connect(function()
 end)
 
 -- #######################################################
--- # LOGIC ESP & PVP CHECK (FIXED)                       #
+-- # LOGIC ESP & AUTO TELE FRUIT                         #
 -- #######################################################
-local function GetPVPStatus(player)
-    -- Quét đa vị trí để tìm trạng thái PVP
-    local status = player:FindFirstChild("Status") or player:FindFirstChild("Data")
-    if status then
-        local pvp = status:FindFirstChild("PVP") or status:FindFirstChild("PvpEnabled")
-        if pvp and pvp:IsA("BoolValue") then return pvp.Value end
-    end
-    -- Kiểm tra trong Character (một số game để Tag ở đây)
-    if player.Character and player.Character:FindFirstChild("PvpEnabled") then
-        return player.Character.PvpEnabled.Value
-    end
-    return false
-end
-
 run.RenderStepped:Connect(function()
     if not active then return end
     
+    -- ESP Player
     for _, pl in pairs(players:GetPlayers()) do
         if pl ~= p and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
             local hrp = pl.Character.HumanoidRootPart
             local hum = pl.Character:FindFirstChildOfClass("Humanoid")
             local espName = hrp:FindFirstChild("ESP_UI")
-            
             if esp_player then
                 if not espName then
                     espName = Instance.new("BillboardGui", hrp)
                     espName.Name = "ESP_UI"
-                    espName.Size = UDim2.new(0, 150, 0, 80)
+                    espName.Size = UDim2.new(0, 150, 0, 70)
                     espName.AlwaysOnTop = true
                     espName.ExtentsOffset = Vector3.new(0, 3, 0)
                     local label = Instance.new("TextLabel", espName)
@@ -259,22 +246,21 @@ run.RenderStepped:Connect(function()
                     label.BackgroundTransparency = 1
                     label.TextColor3 = Color3.new(1, 1, 1)
                     label.Font = Enum.Font.SciFi
-                    label.TextSize = 14
+                    label.TextSize = 16
                 end
-                
-                local isPVP = GetPVPStatus(pl)
-                local pvpTxt = isPVP and "ON" or "OFF"
+                local energy = pl:FindFirstChild("Data") and pl.Data:FindFirstChild("Energy") and pl.Data.Energy.Value or "N/A"
                 local dist = math.floor((p.Character.HumanoidRootPart.Position - hrp.Position).Magnitude)
-                
-                espName.TextLabel.Text = string.format("%s\nHP: %d/%d\nPVP: %s\n[%dm]", pl.Name, hum.Health, hum.MaxHealth, pvpTxt, dist)
-                espName.TextLabel.TextColor3 = isPVP and Color3.new(1, 0.2, 0.2) or Color3.new(0.2, 1, 0.2)
+                espName.TextLabel.Text = string.format("%s\nHP: %d/%d\nE: %s\n[%dm]", pl.Name, hum.Health, hum.MaxHealth, tostring(energy), dist)
+                if hum.Health < hum.MaxHealth * 0.3 then espName.TextLabel.TextColor3 = Color3.new(1,0,0)
+                elseif hum.Health < hum.MaxHealth * 0.7 then espName.TextLabel.TextColor3 = Color3.new(1,1,0)
+                else espName.TextLabel.TextColor3 = Color3.new(0,1,0) end
             else
                 if espName then espName:Destroy() end
             end
         end
     end
-    
-    -- Fruit Logic
+
+    -- Fruit Logic (ESP + AUTO TELE)
     for _, v in pairs(workspace:GetChildren()) do
         if v:IsA("Tool") and (v.Name:find("Fruit") or v:FindFirstChild("Handle")) then
             if esp_fruit then
@@ -293,14 +279,15 @@ run.RenderStepped:Connect(function()
                 end
             end
             if auto_get_fruit and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                p.Character.HumanoidRootPart.CFrame = v:GetModelCFrame() or v.Handle.CFrame
+                local fruit_pos = v:GetModelCFrame() or (v:FindFirstChild("Handle") and v.Handle.CFrame)
+                if fruit_pos then p.Character.HumanoidRootPart.CFrame = fruit_pos end
             end
         end
     end
 end)
 
 -- #######################################################
--- # MOVEMENT LOGIC                                      #
+-- # PHẦN DI CHUYỂN & FLY                                #
 -- #######################################################
 run.Stepped:Connect(function()
     if not active then return end
@@ -334,7 +321,7 @@ run.Stepped:Connect(function()
 end)
 
 -- #######################################################
--- # SKILL LOGIC (ĐÃ BỎ AUTO CLICK)                      #
+-- # AUTO SKILL (KHÔNG CÓ AUTO CLICK)                    #
 -- #######################################################
 task.spawn(function()
     while active do
@@ -343,14 +330,15 @@ task.spawn(function()
         local target_hrp = target_player and target_player.Character and target_player.Character:FindFirstChild("HumanoidRootPart")
         local is_near = false
         if hrp and target_hrp then
-            if (hrp.Position - target_hrp.Position).Magnitude < 20 then is_near = true end
+            if (hrp.Position - target_hrp.Position).Magnitude < 15 then is_near = true end
         end
         
+        -- Chỉ thực hiện Auto Skill khi ở gần mục tiêu
         if is_near then
-            if auto_z then vim:SendKeyEvent(true, "Z", false, game) task.wait(0.05) vim:SendKeyEvent(false, "Z", false, game) end
-            if auto_x then vim:SendKeyEvent(true, "X", false, game) task.wait(0.05) vim:SendKeyEvent(false, "X", false, game) end
-            if auto_c then vim:SendKeyEvent(true, "C", false, game) task.wait(0.05) vim:SendKeyEvent(false, "C", false, game) end
-            if auto_v then vim:SendKeyEvent(true, "V", false, game) task.wait(0.05) vim:SendKeyEvent(false, "V", false, game) end
+            if auto_z then vim:SendKeyEvent(true, "Z", false, game) task.wait() vim:SendKeyEvent(false, "Z", false, game) end
+            if auto_x then vim:SendKeyEvent(true, "X", false, game) task.wait() vim:SendKeyEvent(false, "X", false, game) end
+            if auto_c then vim:SendKeyEvent(true, "C", false, game) task.wait() vim:SendKeyEvent(false, "C", false, game) end
+            if auto_v then vim:SendKeyEvent(true, "V", false, game) task.wait() vim:SendKeyEvent(false, "V", false, game) end
         end
         task.wait(0.1)
     end
