@@ -19,6 +19,9 @@ local flying, aim_player, auto_tele = false, false, false
 local auto_z, auto_x, auto_c, auto_v = false, false, false, false
 local esp_player, esp_fruit = false, false 
 local auto_get_fruit = false 
+local auto_store = false -- BIẾN MỚI
+local auto_v3 = false    -- BIẾN MỚI
+local auto_v4 = false    -- BIẾN MỚI
 local target_player = nil
 local active = true 
 
@@ -59,7 +62,7 @@ main.Size = UDim2.new(0, 500, 0, 600)
 main.Position = UDim2.new(0.5, -250, 0.5, -300)
 main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 main.BorderSizePixel = 0
-main.CanvasSize = UDim2.new(0, 0, 4.8, 0) 
+main.CanvasSize = UDim2.new(0, 0, 5.5, 0) -- Tăng thêm để chứa nút mới
 main.ScrollBarThickness = 8
 main.Visible = true
 main.Active = true
@@ -137,27 +140,31 @@ CreateToggle("CHẾ ĐỘ BAY", 320, false, function(v) flying = v end)
 CreateToggle("AIM PLAYER", 385, false, function(v) aim_player = v end)
 CreateToggle("AUTO TELEPORT ĐỊCH", 450, false, function(v) auto_tele = v end)
 
--- ESP SETTINGS
-local espTitle = createLabel("--- ESP & FRUIT SETTINGS ---", UDim2.new(0,0,0,520), 24, main)
+-- FRUIT SETTINGS
+local espTitle = createLabel("--- FRUIT SETTINGS ---", UDim2.new(0,0,0,520), 24, main)
 espTitle.TextColor3 = Color3.fromRGB(0, 200, 255)
-CreateToggle("ESP PLAYER (Tên/HP/E)", 570, false, function(v) esp_player = v end)
-CreateToggle("ESP FRUIT (Trái Ác Quỷ)", 635, false, function(v) esp_fruit = v end)
-CreateToggle("AUTO TELE TO FRUIT", 700, false, function(v) auto_get_fruit = v end)
+CreateToggle("ESP FRUIT (Trái Ác Quỷ)", 570, false, function(v) esp_fruit = v end)
+CreateToggle("AUTO TELE TO FRUIT", 635, false, function(v) auto_get_fruit = v end)
+CreateToggle("AUTO STORE FRUIT (Lưu Kho)", 700, false, function(v) auto_store = v end)
+
+-- AWAKENING SETTINGS
+local awkTitle = createLabel("--- AWAKENING SETTINGS ---", UDim2.new(0,0,0,770), 24, main)
+awkTitle.TextColor3 = Color3.fromRGB(255, 0, 255)
+CreateToggle("AUTO BẬT RACE V3 (T)", 820, false, function(v) auto_v3 = v end)
+CreateToggle("AUTO BẬT RACE V4 (Y)", 885, false, function(v) auto_v4 = v end)
 
 -- SKILL SETTINGS
-local skillTitle = createLabel("--- AUTO SKILL SETTINGS ---", UDim2.new(0,0,0,780), 24, main)
+local skillTitle = createLabel("--- AUTO SKILL SETTINGS ---", UDim2.new(0,0,0,960), 24, main)
 skillTitle.TextColor3 = Color3.fromRGB(255, 200, 0)
-CreateToggle("Auto Skill [Z]", 830, false, function(v) auto_z = v end)
-CreateToggle("Auto Skill [X]", 895, false, function(v) auto_x = v end)
-CreateToggle("Auto Skill [C]", 960, false, function(v) auto_c = v end)
-CreateToggle("Auto Skill [V]", 1025, false, function(v) auto_v = v end)
+CreateToggle("Auto Skill [Z]", 1010, false, function(v) auto_z = v end)
+CreateToggle("Auto Skill [X]", 1075, false, function(v) auto_x = v end)
+CreateToggle("Auto Skill [C]", 1140, false, function(v) auto_c = v end)
+CreateToggle("Auto Skill [V]", 1205, false, function(v) auto_v = v end)
 
--- #######################################################
--- # PHẦN CHỌN NGƯỜI CHƠI                                #
--- #######################################################
+-- PLAYER LIST
 local selectBtn = Instance.new("TextButton", main)
 selectBtn.Size = UDim2.new(0.85, 0, 0, 55)
-selectBtn.Position = UDim2.new(0.075, 0, 0, 1110)
+selectBtn.Position = UDim2.new(0.075, 0, 0, 1290)
 selectBtn.Text = "DANH SÁCH NGƯỜI CHƠI (MỞ)"
 selectBtn.BackgroundColor3 = Color3.fromRGB(0, 80, 150)
 selectBtn.TextColor3 = Color3.new(1, 1, 1)
@@ -167,7 +174,7 @@ Instance.new("UICorner", selectBtn)
 
 local pFrame = Instance.new("Frame", main)
 pFrame.Size = UDim2.new(0.85, 0, 0, 350)
-pFrame.Position = UDim2.new(0.075, 0, 0, 1175)
+pFrame.Position = UDim2.new(0.075, 0, 0, 1355)
 pFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 pFrame.Visible = false 
 Instance.new("UICorner", pFrame)
@@ -182,85 +189,37 @@ local layout = Instance.new("UIListLayout", pScroll)
 layout.Padding = UDim.new(0, 8)
 layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-local refreshBtn = Instance.new("TextButton", pFrame)
-refreshBtn.Size = UDim2.new(0.9, 0, 0, 45)
-refreshBtn.Position = UDim2.new(0.05, 0, 0.82, 0)
-refreshBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
-refreshBtn.Text = "TẢI LẠI DANH SÁCH"
-refreshBtn.TextColor3 = Color3.new(1, 1, 1)
-refreshBtn.Font = Enum.Font.SciFi
-refreshBtn.TextSize = 20
-Instance.new("UICorner", refreshBtn)
-
-local function UpdateList()
-    for _, child in pairs(pScroll:GetChildren()) do
-        if child:IsA("TextButton") then child:Destroy() end
-    end
-    for _, pl in pairs(players:GetPlayers()) do
-        if pl ~= p then
-            local b = Instance.new("TextButton", pScroll)
-            b.Size = UDim2.new(0.9, 0, 0, 50)
-            b.Text = pl.Name 
-            b.Font = Enum.Font.SciFi
-            b.TextSize = 20
-            b.BackgroundColor3 = (target_player == pl) and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(45, 45, 45)
-            b.TextColor3 = Color3.new(1, 1, 1)
-            Instance.new("UICorner", b)
-            b.MouseButton1Click:Connect(function() 
-                target_player = pl 
-                UpdateList()
-            end)
-        end
-    end
-    pScroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
-end
-
-refreshBtn.MouseButton1Click:Connect(UpdateList)
-selectBtn.MouseButton1Click:Connect(function()
-    pFrame.Visible = not pFrame.Visible
-    selectBtn.Text = pFrame.Visible and "DANH SÁCH NGƯỜI CHƠI (ĐÓNG)" or "DANH SÁCH NGƯỜI CHƠI (MỞ)"
-    if pFrame.Visible then UpdateList() end
-end)
-
--- #######################################################
--- # LOGIC ESP & AUTO TELE FRUIT                         #
--- #######################################################
-run.RenderStepped:Connect(function()
-    if not active then return end
-    
-    -- ESP Player
-    for _, pl in pairs(players:GetPlayers()) do
-        if pl ~= p and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp = pl.Character.HumanoidRootPart
-            local hum = pl.Character:FindFirstChildOfClass("Humanoid")
-            local espName = hrp:FindFirstChild("ESP_UI")
-            if esp_player then
-                if not espName then
-                    espName = Instance.new("BillboardGui", hrp)
-                    espName.Name = "ESP_UI"
-                    espName.Size = UDim2.new(0, 150, 0, 70)
-                    espName.AlwaysOnTop = true
-                    espName.ExtentsOffset = Vector3.new(0, 3, 0)
-                    local label = Instance.new("TextLabel", espName)
-                    label.Size = UDim2.new(1, 0, 1, 0)
-                    label.BackgroundTransparency = 1
-                    label.TextColor3 = Color3.new(1, 1, 1)
-                    label.Font = Enum.Font.SciFi
-                    label.TextSize = 16
+-- LOGIC AUTO STORE FRUIT
+task.spawn(function()
+    while task.wait(1) do
+        if auto_store and active then
+            for _, v in pairs(p.Backpack:GetChildren()) do
+                if v:IsA("Tool") and v.Name:find("Fruit") then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", v:GetAttribute("FruitName"), v)
                 end
-                local energy = pl:FindFirstChild("Data") and pl.Data:FindFirstChild("Energy") and pl.Data.Energy.Value or "N/A"
-                local dist = math.floor((p.Character.HumanoidRootPart.Position - hrp.Position).Magnitude)
-                espName.TextLabel.Text = string.format("%s\nHP: %d/%d\nE: %s\n[%dm]", pl.Name, hum.Health, hum.MaxHealth, tostring(energy), dist)
-                if hum.Health < hum.MaxHealth * 0.3 then espName.TextLabel.TextColor3 = Color3.new(1,0,0)
-                elseif hum.Health < hum.MaxHealth * 0.7 then espName.TextLabel.TextColor3 = Color3.new(1,1,0)
-                else espName.TextLabel.TextColor3 = Color3.new(0,1,0) end
-            else
-                if espName then espName:Destroy() end
+            end
+            for _, v in pairs(p.Character:GetChildren()) do
+                if v:IsA("Tool") and v.Name:find("Fruit") then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", v:GetAttribute("FruitName"), v)
+                end
             end
         end
     end
+end)
 
-    -- Fruit Logic (ESP + AUTO TELE)
+-- LOGIC AUTO V3/V4
+task.spawn(function()
+    while task.wait(0.5) do
+        if not active then break end
+        if auto_v3 then vim:SendKeyEvent(true, "T", false, game) task.wait() vim:SendKeyEvent(false, "T", false, game) end
+        if auto_v4 then vim:SendKeyEvent(true, "Y", false, game) task.wait() vim:SendKeyEvent(false, "Y", false, game) end
+    end
+end)
+
+-- LOGIC ESP & TELE FRUIT
+run.RenderStepped:Connect(function()
+    if not active then return end
+    
     for _, v in pairs(workspace:GetChildren()) do
         if v:IsA("Tool") and (v.Name:find("Fruit") or v:FindFirstChild("Handle")) then
             if esp_fruit then
@@ -286,16 +245,13 @@ run.RenderStepped:Connect(function()
     end
 end)
 
--- #######################################################
--- # PHẦN DI CHUYỂN & FLY                                #
--- #######################################################
+-- LOGIC DI CHUYỂN
 run.Stepped:Connect(function()
     if not active then return end
     local char = p.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if hum then
-        hum.UseJumpPower = true 
         hum.JumpPower = j_val
         if flying and hrp then
             local bv = hrp:FindFirstChild("FlyVel") or Instance.new("BodyVelocity", hrp)
@@ -320,20 +276,14 @@ run.Stepped:Connect(function()
     end
 end)
 
--- #######################################################
--- # AUTO SKILL (KHÔNG CÓ AUTO CLICK)                    #
--- #######################################################
+-- LOGIC SKILL
 task.spawn(function()
     while active do
-        local char = p.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
         local target_hrp = target_player and target_player.Character and target_player.Character:FindFirstChild("HumanoidRootPart")
         local is_near = false
-        if hrp and target_hrp then
-            if (hrp.Position - target_hrp.Position).Magnitude < 15 then is_near = true end
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and target_hrp then
+            if (p.Character.HumanoidRootPart.Position - target_hrp.Position).Magnitude < 15 then is_near = true end
         end
-        
-        -- Chỉ thực hiện Auto Skill khi ở gần mục tiêu
         if is_near then
             if auto_z then vim:SendKeyEvent(true, "Z", false, game) task.wait() vim:SendKeyEvent(false, "Z", false, game) end
             if auto_x then vim:SendKeyEvent(true, "X", false, game) task.wait() vim:SendKeyEvent(false, "X", false, game) end
@@ -344,4 +294,21 @@ task.spawn(function()
     end
 end)
 
+local function UpdateList()
+    for _, child in pairs(pScroll:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+    for _, pl in pairs(players:GetPlayers()) do
+        if pl ~= p then
+            local b = Instance.new("TextButton", pScroll)
+            b.Size = UDim2.new(0.9, 0, 0, 50)
+            b.Text = pl.Name 
+            b.BackgroundColor3 = (target_player == pl) and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(45, 45, 45)
+            b.TextColor3 = Color3.new(1, 1, 1)
+            Instance.new("UICorner", b)
+            b.MouseButton1Click:Connect(function() target_player = pl UpdateList() end)
+        end
+    end
+    pScroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
+end
+
+selectBtn.MouseButton1Click:Connect(function() pFrame.Visible = not pFrame.Visible UpdateList() end)
 UpdateList()
